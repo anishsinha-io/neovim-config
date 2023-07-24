@@ -11,12 +11,29 @@ require("lazy").setup({
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
     -- import any extras modules here
+
+    -- typescript + json + prettier
     { import = "lazyvim.plugins.extras.lang.typescript" },
     { import = "lazyvim.plugins.extras.ui.mini-animate" },
     { import = "lazyvim.plugins.extras.lang.json" },
 
+    -- prettier
+    { import = "lazyvim.plugins.extras.formatting.prettier" },
+
     -- rust
     { import = "lazyvim.plugins.extras.lang.rust" },
+
+    -- clangd
+    { import = "lazyvim.plugins.extras.lang.clangd" },
+
+    -- python
+    { import = "lazyvim.plugins.extras.lang.python" },
+
+    -- docker
+    { import = "lazyvim.plugins.extras.lang.docker" },
+
+    -- go
+    { import = "lazyvim.plugins.extras.lang.go" },
 
     -- term
     { "akinsho/toggleterm.nvim", version = "*", config = true },
