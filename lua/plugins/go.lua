@@ -1,25 +1,82 @@
+local util = require("util")
+
 return {
+
+  -- Add Go & related to treesitter
   {
     "nvim-treesitter/nvim-treesitter",
     opts = function(_, opts)
-      vim.list_extend(opts.ensure_installed, {
-        "go",
-        "gomod",
-        "gowork",
-        "gosum",
-      })
+      if type(opts.ensure_installed) == "table" then
+        util.list_insert_unique(opts.ensure_installed, { "go", "gomod", "gosum", "gowork" })
+      end
     end,
   },
+
+  -- Ensure Go LSP, linter, and imports reviser are installed
+  {
+    "williamboman/mason.nvim",
+    opts = function(_, opts)
+      if type(opts.ensure_installed) == "table" then
+        util.list_insert_unique(opts.ensure_installed, "goimports-reviser")
+      end
+    end,
+  },
+
+  {
+    "jay-babu/mason-null-ls.nvim",
+    opts = function(_, opts)
+      if type(opts.ensure_installed) == "table" then
+        util.list_insert_unique(opts.ensure_installed, { "gomodifytags", "gofumpt", "iferr", "impl" })
+      end
+    end,
+  },
+
+  {
+    "leoluz/nvim-dap-go",
+    dependencies = {
+      "mfussenegger/nvim-dap",
+      {
+        "jay-babu/mason-nvim-dap.nvim",
+        opts = function(_, opts)
+          if type(opts.ensure_installed) == "table" then
+            util.list_insert_unique(opts.ensure_installed, "delve")
+          end
+        end,
+      },
+    },
+    ft = "go",
+    config = true,
+  },
+
+  -- Correctly setup lspconfig for Go 🚀
   {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        gopls = {
-          keys = {
-            -- Workaround for the lack of a DAP strategy in neotest-go: https://github.com/nvim-neotest/neotest-go/issues/12
-            { "<leader>td", "<cmd>lua require('dap-go').debug_test()<CR>", desc = "Debug Nearest (Go)" },
-          },
-          settings = {
+        -- Ensure mason installs the server
+        golangci_lint_ls = {},
+        gopls = {},
+      },
+      setup = {
+        gopls = function(_, opts)
+          require("lazyvim.util").on_attach(function(client, _)
+            if client.name == "gopls" then
+              -- workaround for gopls not supporting semanticTokensProvider
+              -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
+              if not client.server_capabilities.semanticTokensProvider then
+                local semanticTokens = client.config.capabilities.textDocument.semanticTokens
+                client.server_capabilities.semanticTokensProvider = {
+                  full = true,
+                  legend = {
+                    tokenTypes = semanticTokens.tokenTypes,
+                    tokenModifiers = semanticTokens.tokenModifiers,
+                  },
+                  range = true,
+                }
+              end
+            end
+          end)
+          opts.settings = {
             gopls = {
               gofumpt = true,
               codelenses = {
@@ -54,32 +111,29 @@ return {
               directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
               semanticTokens = true,
             },
-          },
-        },
-      },
-
-      setup = {
-        gopls = function(_, opts)
-          -- workaround for gopls not supporting semanticTokensProvider
-          -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
-          require("lazyvim.util").on_attach(function(client, _)
-            if client.name == "gopls" then
-              if not client.server_capabilities.semanticTokensProvider then
-                local semantic = client.config.capabilities.textDocument.semanticTokens
-                client.server_capabilities.semanticTokensProvider = {
-                  full = true,
-                  legend = {
-                    tokenTypes = semantic.tokenTypes,
-                    tokenModifiers = semantic.tokenModifiers,
-                  },
-                  range = true,
-                }
-              end
-            end
-          end)
-          -- end workaround
+          }
         end,
       },
     },
+  },
+
+  -- Add go.nvim
+  {
+    "ray-x/go.nvim",
+    dependencies = {
+      "ray-x/guihua.lua",
+      "neovim/nvim-lspconfig",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = true,
+    event = "CmdlineEnter",
+    ft = { "go", "gomod", "gosum", "gowork" },
+  },
+
+  -- Add gopher.nvim
+  {
+    "olexsmir/gopher.nvim",
+    dependencies = { "nvim-lua/plenary.nvim", "nvim-treesitter/nvim-treesitter" },
+    config = true,
   },
 }
