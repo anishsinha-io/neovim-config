@@ -10,8 +10,9 @@
 --     end)
 --   end,
 -- })
+--
 
-vim.api.nvim_create_autocmd("BufWinLeave", {
+vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = { "*.py" },
-  command = "!black .",
+  command = "!black %",
 })
