@@ -15,11 +15,11 @@ require("toggleterm").setup({
   close_on_exit = true,
   shell = vim.o.shell,
   float_opts = {
-    border = "double",
+    border = "single",
     winblend = 0,
     highlights = {
       border = "Normal",
-      background = "Normal",
+      -- background = "Normal",
     },
   },
 })
@@ -38,3 +38,19 @@ if treesitter_ok then
     },
   })
 end
+
+require("notify").setup({
+  background_colour = "#000000",
+})
+
+require("lspconfig").sqlls.setup({
+  on_attach = function(client, bufnr)
+    require("sqlls").on_attach(client, bufnr)
+  end,
+})
+
+require("onedarkpro").setup({
+  options = {
+    transparency = true,
+  },
+})
